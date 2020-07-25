@@ -1,4 +1,6 @@
-sdk/*
-build
+sdk
+dist
+tools
 .DS_Store
 !sdk/README.md
+!tools/README.md

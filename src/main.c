@@ -6,7 +6,7 @@
 #error Define ZB_ED_ROLE to compile End Device source code.
 #endif
 
-#define REPORTING_INTERVAL 60
+#define REPORTING_INTERVAL 5
 #define ENDPOINT 1
 #define IEEE_CHANNEL_MASK (1l << ZIGBEE_CHANNEL)
 
@@ -52,19 +52,21 @@ ZB_HA_DECLARE_TEMPERATURE_SENSOR_EP(
 
 ZB_HA_DECLARE_TEMPERATURE_SENSOR_CTX(temperature_context, temperature_endpoint);
 
-void report_temperature(zb_uint8_t param) {
+static void report_temperature(zb_uint8_t param) {
+    static zb_int16_t temperature = 2500;
+
     ZB_ZCL_SET_ATTRIBUTE(
         ENDPOINT,
         ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT,
         ZB_ZCL_CLUSTER_SERVER_ROLE,
         ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID,
-        0,
+        (zb_uint8_t *)&temperature,
         ZB_FALSE
     );
 
     ZB_SCHEDULE_APP_ALARM(
         report_temperature,
-        0,
+        temperature,
         REPORTING_INTERVAL * ZB_TIME_ONE_SECOND
     );
 }

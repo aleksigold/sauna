@@ -78,7 +78,7 @@
 // <i> 802.15.4 channel used by Zigbee. Defaults to 16.
 
 #ifndef ZIGBEE_CHANNEL
-#define ZIGBEE_CHANNEL 16
+#define ZIGBEE_CHANNEL 15
 #endif
 
 // <o> ZIGBEE_TRACE_LEVEL - Trace level of Zigbee stack logs.  <0-4> 
@@ -4714,4 +4714,3 @@
 
 // <<< end of configuration section >>>
 #endif //SDK_CONFIG_H
-

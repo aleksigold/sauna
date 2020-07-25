@@ -1,9 +1,13 @@
-PROJECT_NAME     := sauna
-TARGETS          := nrf52840_xxaa
-OUTPUT_DIRECTORY := build
 
-SDK_ROOT := sdk
-PROJ_DIR := src
+PROJECT_NAME     := sauna
+DEFAULT_TARGET   := nrf52840_xxaa
+TARGETS          := $(DEFAULT_TARGET)
+OUTPUT_DIRECTORY := dist
+PROJ_DIR         := src
+
+HW_VERSION := 52
+
+SDK_ROOT := sdk/nRF5_SDK_for_Thread_and_Zigbee_v4.1.0_32ce5f8
 
 $(OUTPUT_DIRECTORY)/nrf52840_xxaa.out: \
   LINKER_SCRIPT  := sauna.ld
@@ -67,21 +71,20 @@ SRC_FILES += \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_uart.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_uarte.c \
   $(SDK_ROOT)/components/libraries/bsp/bsp.c \
-  $(PROJ_DIR)/main.c \
   $(SDK_ROOT)/modules/nrfx/mdk/system_nrf52840.c \
   $(SDK_ROOT)/components/zigbee/pressure_cluster/zb_zcl_pressure_measurement.c \
   $(SDK_ROOT)/components/zigbee/common/zigbee_helpers.c \
   $(SDK_ROOT)/components/zigbee/common/zigbee_logger_eprxzcl.c \
+  $(PROJ_DIR)/main.c
 
 # Include folders common to all targets
 INC_FOLDERS += \
+  config \
   $(SDK_ROOT)/external/fprintf \
-  $(PROJ_DIR) \
   $(SDK_ROOT)/integration/nrfx/legacy \
   $(SDK_ROOT)/components/libraries/experimental_section_vars \
   $(SDK_ROOT)/external/zboss/osif \
   $(SDK_ROOT)/components/libraries/atomic_fifo \
-  config \
   $(SDK_ROOT)/external/nRF-IEEE-802.15.4-radio-driver/src \
   $(SDK_ROOT)/external/nRF-IEEE-802.15.4-radio-driver/src/fem/three_pin_gpio \
   $(SDK_ROOT)/components/libraries/delay \
@@ -121,99 +124,71 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/libraries/button \
   $(SDK_ROOT)/external/nRF-IEEE-802.15.4-radio-driver/src/fem \
   $(SDK_ROOT)/components/libraries/sensorsim \
+  $(PROJ_DIR)
 
-# Libraries common to all targets
 LIB_FILES += \
   $(SDK_ROOT)/external/zboss/lib/gcc/libzboss.ed.a \
   $(SDK_ROOT)/external/zboss/lib/gcc/nrf52840/nrf_radio_driver.a \
 
-# Optimization flags
-OPT = -Os -ggdb3
-# Uncomment the line below to enable link time optimization
-#OPT += -flto
+OPT = -O3 -g3
+UPPERCASE_DEFAULT_TARGET := $(shell echo $(DEFAULT_TARGET) | tr '[:lower:]' '[:upper:]')
+UPPERCASE_SD_VERSION := $(shell echo $(SD_VERSION) | tr '[:lower:]' '[:upper:]')
 
-# C flags common to all targets
 CFLAGS += $(OPT)
 CFLAGS += -DAPP_TIMER_V2
 CFLAGS += -DAPP_TIMER_V2_RTC1_ENABLED
-CFLAGS += -DBOARD_PCA10056
+CFLAGS += -DBOARD_CUSTOM
 CFLAGS += -DCONFIG_GPIO_AS_PINRESET
 CFLAGS += -DENABLE_FEM
 CFLAGS += -DFLOAT_ABI_HARD
-CFLAGS += -DNRF52840_XXAA
+CFLAGS += -D$(UPPERCASE_DEFAULT_TARGET)
 CFLAGS += -DZB_ED_ROLE
 CFLAGS += -DZB_TRACE_LEVEL=0
 CFLAGS += -DZB_TRACE_MASK=0
+CFLAGS += -DBSP_DEFINES_ONLY
 CFLAGS += -mcpu=cortex-m4
 CFLAGS += -mthumb -mabi=aapcs
 CFLAGS += -Wall -Werror
 CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
-# keep every function in a separate section, this allows linker to discard unused ones
 CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing
-CFLAGS += -fno-builtin -fshort-enums -Wno-packed-bitfield-compat
+CFLAGS += -fno-builtin -fshort-enums
 
-# C++ flags common to all targets
-CXXFLAGS += $(OPT)
-# Assembler flags common to all targets
-ASMFLAGS += -ggdb3
+ASMFLAGS += -g3
 ASMFLAGS += -mcpu=cortex-m4
 ASMFLAGS += -mthumb -mabi=aapcs
 ASMFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 ASMFLAGS += -DAPP_TIMER_V2
 ASMFLAGS += -DAPP_TIMER_V2_RTC1_ENABLED
-ASMFLAGS += -DBOARD_PCA10056
+ASMFLAGS += -DBOARD_CUSTOM
 ASMFLAGS += -DCONFIG_GPIO_AS_PINRESET
 ASMFLAGS += -DENABLE_FEM
 ASMFLAGS += -DFLOAT_ABI_HARD
-ASMFLAGS += -DNRF52840_XXAA
+ASMFLAGS += -D$(UPPERCASE_DEFAULT_TARGET)
+ASMFLAGS += -DBSP_DEFINES_ONLY
 ASMFLAGS += -DZB_ED_ROLE
 
-# Linker flags
 LDFLAGS += $(OPT)
 LDFLAGS += -mthumb -mabi=aapcs -L$(SDK_ROOT)/modules/nrfx/mdk -T$(LINKER_SCRIPT)
 LDFLAGS += -mcpu=cortex-m4
 LDFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
-# let linker dump unused sections
 LDFLAGS += -Wl,--gc-sections
-# use newlib in nano version
 LDFLAGS += --specs=nano.specs
 
-nrf52840_xxaa: CFLAGS += -D__HEAP_SIZE=8192
-nrf52840_xxaa: CFLAGS += -D__STACK_SIZE=8192
-nrf52840_xxaa: ASMFLAGS += -D__HEAP_SIZE=8192
-nrf52840_xxaa: ASMFLAGS += -D__STACK_SIZE=8192
+$(DEFAULT_TARGET): CFLAGS += -D__HEAP_SIZE=8192
+$(DEFAULT_TARGET): CFLAGS += -D__STACK_SIZE=8192
+$(DEFAULT_TARGET): ASMFLAGS += -D__HEAP_SIZE=8192
+$(DEFAULT_TARGET): ASMFLAGS += -D__STACK_SIZE=8192
 
-# Add standard libraries at the very end of the linker input, after all objects
-# that may need symbols provided by these libraries.
 LIB_FILES += -lc -lnosys -lm -lstdc++
 
-
-.PHONY: default help
-
-# Default target - first one defined
-default: nrf52840_xxaa
-
-# Print all targets that can be built
-help:
-	@echo following targets are available:
-	@echo		nrf52840_xxaa
-	@echo		sdk_config - starting external tool for editing sdk_config.h
-	@echo		flash      - flashing binary
+default: uf2
 
 TEMPLATE_PATH := $(SDK_ROOT)/components/toolchain/gcc
-
-
 include $(TEMPLATE_PATH)/Makefile.common
 
 $(foreach target, $(TARGETS), $(call define_target, $(target)))
 
-.PHONY: flash erase
+APPLICATION_HEX := $(OUTPUT_DIRECTORY)/$(DEFAULT_TARGET).hex
 
-# Flash the program
-flash: default
-	@echo Flashing: $(OUTPUT_DIRECTORY)/nrf52840_xxaa.hex
-	nrfjprog -f nrf52 --program $(OUTPUT_DIRECTORY)/nrf52840_xxaa.hex --sectorerase
-	nrfjprog -f nrf52 --reset
-
-erase:
-	nrfjprog -f nrf52 --eraseall
+uf2: $(APPLICATION_HEX)
+	python tools/uf2conv.py $(APPLICATION_HEX) -c -f 0xADA52840 -o dist/flash.uf2
