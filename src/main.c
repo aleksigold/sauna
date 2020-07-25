@@ -10,18 +10,30 @@
 #define ENDPOINT 1
 #define IEEE_CHANNEL_MASK (1l << ZIGBEE_CHANNEL)
 
+#define MANUFACTURER "Aleksi Gold"
+#define MODEL "Temperature Sensor"
+
 typedef struct {
-    zb_zcl_basic_attrs_t basic_attr;
+    zb_zcl_basic_attrs_ext_t basic_attr;
     zb_zcl_identify_attrs_t identify_attr;
     zb_zcl_temp_measurement_attrs_t temp_measurement_attr;
 } device_ctx_t;
 
 static device_ctx_t device_ctx;
 
-ZB_ZCL_DECLARE_BASIC_ATTRIB_LIST(
+ZB_ZCL_DECLARE_BASIC_ATTRIB_LIST_EXT(
     basic_attr_list,
     &device_ctx.basic_attr.zcl_version,
-    &device_ctx.basic_attr.power_source
+    &device_ctx.basic_attr.app_version,
+    &device_ctx.basic_attr.stack_version,
+    &device_ctx.basic_attr.hw_version,
+    device_ctx.basic_attr.mf_name,
+    device_ctx.basic_attr.model_id,
+    device_ctx.basic_attr.date_code,
+    &device_ctx.basic_attr.power_source,
+    device_ctx.basic_attr.location_id,
+    &device_ctx.basic_attr.ph_env,
+    device_ctx.basic_attr.sw_ver
 );
 
 ZB_ZCL_DECLARE_IDENTIFY_ATTRIB_LIST(
@@ -104,6 +116,18 @@ void init_attrs() {
     device_ctx.temp_measurement_attr.min_measure_value = ZB_ZCL_ATTR_TEMP_MEASUREMENT_MIN_VALUE_MIN_VALUE;
     device_ctx.temp_measurement_attr.max_measure_value = ZB_ZCL_ATTR_TEMP_MEASUREMENT_MAX_VALUE_MAX_VALUE;
     device_ctx.temp_measurement_attr.tolerance = ZB_ZCL_ATTR_TEMP_MEASUREMENT_TOLERANCE_MAX_VALUE;
+
+    ZB_ZCL_SET_STRING_VAL(
+        device_ctx.basic_attr.mf_name,
+        MANUFACTURER,
+        ZB_ZCL_STRING_CONST_SIZE(MANUFACTURER)
+    );
+
+    ZB_ZCL_SET_STRING_VAL(
+        device_ctx.basic_attr.model_id,
+        MODEL,
+        ZB_ZCL_STRING_CONST_SIZE(MODEL)
+    );
 }
 
 void setup() {
