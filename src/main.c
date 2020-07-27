@@ -2,11 +2,13 @@
 #include <zboss_api_addons.h>
 #include <zigbee_helpers.h>
 
+#include "ds18b20.h"
+
 #if !defined ZB_ED_ROLE
 #error Define ZB_ED_ROLE to compile End Device source code.
 #endif
 
-#define REPORTING_INTERVAL 5
+#define REPORTING_INTERVAL 60
 #define ENDPOINT 1
 #define IEEE_CHANNEL_MASK (1l << ZIGBEE_CHANNEL)
 
@@ -20,6 +22,8 @@ typedef struct {
 } device_ctx_t;
 
 static device_ctx_t device_ctx;
+
+static zb_int16_t previous_temperature;
 
 ZB_ZCL_DECLARE_BASIC_ATTRIB_LIST_EXT(
     basic_attr_list,
@@ -65,16 +69,22 @@ ZB_HA_DECLARE_TEMPERATURE_SENSOR_EP(
 ZB_HA_DECLARE_TEMPERATURE_SENSOR_CTX(temperature_context, temperature_endpoint);
 
 static void report_temperature(zb_uint8_t param) {
-    static zb_int16_t temperature = 2500;
+    zb_int16_t temperature = ds18b20_read() * 100;
 
-    ZB_ZCL_SET_ATTRIBUTE(
-        ENDPOINT,
-        ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT,
-        ZB_ZCL_CLUSTER_SERVER_ROLE,
-        ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID,
-        (zb_uint8_t *)&temperature,
-        ZB_FALSE
-    );
+    bool change = ZB_ABS(previous_temperature - temperature) >= 10;
+
+    if (change) {
+        previous_temperature = temperature;
+
+        ZB_ZCL_SET_ATTRIBUTE(
+            ENDPOINT,
+            ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT,
+            ZB_ZCL_CLUSTER_SERVER_ROLE,
+            ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID,
+            (zb_uint8_t *)&temperature,
+            ZB_FALSE
+        );
+    }
 
     ZB_SCHEDULE_APP_ALARM(
         report_temperature,
@@ -132,6 +142,9 @@ void init_attrs() {
 
 void setup() {
     zb_ieee_addr_t ieee_addr;
+    previous_temperature = 0;
+
+    ds18b20_init();
 
     app_timer_init();
 

@@ -75,6 +75,8 @@ SRC_FILES += \
   $(SDK_ROOT)/components/zigbee/pressure_cluster/zb_zcl_pressure_measurement.c \
   $(SDK_ROOT)/components/zigbee/common/zigbee_helpers.c \
   $(SDK_ROOT)/components/zigbee/common/zigbee_logger_eprxzcl.c \
+  $(PROJ_DIR)/onewire.c \
+  $(PROJ_DIR)/ds18b20.c \
   $(PROJ_DIR)/main.c
 
 # Include folders common to all targets
