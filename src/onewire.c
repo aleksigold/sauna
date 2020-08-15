@@ -2,7 +2,7 @@
 #include <nrf_gpio.h>
 #include <nrf_delay.h>
 
-#define DS_PIN 7
+#include "config.h"
 
 static void high() {
     nrf_gpio_cfg_input(DS_PIN, NRF_GPIO_PIN_PULLUP);
